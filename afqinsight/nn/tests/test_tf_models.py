@@ -89,7 +89,6 @@ def run_tensorflow_model(model, data_loaders, n_epochs=20):
         monitor="val_loss",
         factor=0.5,
         patience=20,
-        # removed verbose parameter due to deprecation
     )
 
     callbacks = [early_stopping, ckpt, reduce_lr]
