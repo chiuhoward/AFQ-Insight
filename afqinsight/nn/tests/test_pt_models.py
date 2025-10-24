@@ -81,7 +81,11 @@ def run_pytorch_model(
     optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
     criterion = torch.nn.MSELoss()
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, mode="min", factor=0.5, patience=20, verbose=True
+        optimizer,
+        mode="min",
+        factor=0.5,
+        patience=20,
+        # removed verbose parameter due to deprecation
     )
 
     for epoch in range(n_epochs):
