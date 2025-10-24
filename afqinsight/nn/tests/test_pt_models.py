@@ -85,7 +85,6 @@ def run_pytorch_model(
         mode="min",
         factor=0.5,
         patience=20,
-        # removed verbose parameter due to deprecation
     )
 
     for epoch in range(n_epochs):
