@@ -79,12 +79,12 @@ class CovariateRegressor(BaseEstimator, TransformerMixin):
             estimated from the train-set to the test set (cross_validate=True)
             or whether to fit the covariate regressor separately on the test-set
             (cross_validate=False). Setting this parameter to True is equivalent
-            to "foldwise covariate regression" (FwCR) as described in our paper
-            (https://www.biorxiv.org/content/early/2018/03/28/290684). Setting
-            this parameter to False, however, is NOT equivalent to "whole
-            dataset covariate regression" (WDCR) as it does not apply covariate
-            regression to the *full* dataset, but simply refits the covariate
-            model on the test-set. We recommend setting this parameter to True.
+            to "foldwise covariate regression" (FwCR) as described in Snoek et al.
+            (2019). Setting this parameter to False, however, is NOT equivalent
+            to "whole dataset covariate regression" (WDCR) as it does not apply
+            covariate regression to the *full* dataset, but simply refits the
+            covariate model on the test-set. We recommend setting this parameter
+            to True.
         precise: bool
             Transformer-objects in scikit-learn only allow to pass the data
             (X) and optionally the target (y) to the fit and transform methods.
