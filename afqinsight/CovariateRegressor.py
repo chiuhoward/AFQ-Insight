@@ -104,6 +104,17 @@ class CovariateRegressor(BaseEstimator, TransformerMixin):
         ----------
         weights_ : numpy array
             Array with weights for the covariate(s).
+
+        Notes
+        -----
+        This is a modified version of the ConfoundRegressor from [1]_.
+
+        References
+        ----------
+        .. [1] Lukas Snoek, Steven Miletić, H. Steven Scholte,
+            "How to control for confounds in decoding analyses of neuroimaging data",
+            NeuroImage, Volume 184, 2019, Pages 741-760, ISSN 1053-8119,
+            https://doi.org/10.1016/j.neuroimage.2018.09.074.
         """
         self.covariate = covariate.astype(np.float64)
         self.cross_validate = cross_validate
