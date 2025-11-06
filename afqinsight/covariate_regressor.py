@@ -74,29 +74,25 @@ class CovariateRegressor(BaseEstimator, TransformerMixin):
             will be regressed. This is used to determine how the
             covariate-models should be cross-validated (which is necessary
             to use in in scikit-learn Pipelines).
+        pipeline : sklearn.pipeline.Pipeline or None, default=None
+            Optional scikit-learn pipeline to apply to the covariate before fitting
+            the regression model. If provided, the pipeline will be fitted on the
+            covariate data during the fit phase and applied to transform the covariate
+            in both fit and transform phases. This allows for preprocessing steps
+            such as imputation, scaling, normalization, or feature engineering to be
+            applied to the covariate consistently across train and test sets. If None,
+            the covariate is used as-is without any preprocessing.
         cross_validate : bool
             Whether to cross-validate the covariate-parameters (y~covariate)
             estimated from the train-set to the test set (cross_validate=True)
             or whether to fit the covariate regressor separately on the test-set
-            (cross_validate=False). Setting this parameter to True is equivalent
-            to "foldwise covariate regression" (FwCR) as described in Snoek et al.
-            (2019). Setting this parameter to False, however, is NOT equivalent
-            to "whole dataset covariate regression" (WDCR) as it does not apply
-            covariate regression to the *full* dataset, but simply refits the
-            covariate model on the test-set. We recommend setting this parameter
-            to True.
+            (cross_validate=False).
         precise: bool
-            Transformer-objects in scikit-learn only allow to pass the data
-            (X) and optionally the target (y) to the fit and transform methods.
-            However, we need to index the covariate accordingly as well. To do so,
-            we compare the X during initialization (self.X) with the X passed to
-            fit/transform. As such, we can infer which samples are passed to the
-            methods and index the covariate accordingly. When setting precise to
-            True, the arrays are compared feature-wise, which is accurate, but
-            relatively slow. When setting precise to False, it will infer the index
-            by looking at the hash of all the features, which is much
-            faster. Also, to aid the accuracy, we remove the features which are constant
-            (0) across samples.
+            When setting precise to True, the arrays are compared feature-wise,
+            which is accurate, but relatively slow. When setting precise to False,
+            it will infer the index of the covariates by looking at the hash of all
+            the features, which is much faster. Also, to aid the accuracy, we remove
+            the features which are constant (0) across samples.
         stack_intercept : bool
             Whether to stack an intercept to the covariate (default is True)
 
@@ -107,7 +103,18 @@ class CovariateRegressor(BaseEstimator, TransformerMixin):
 
         Notes
         -----
-        This is a modified version of the ConfoundRegressor from [1]_.
+        This is a modified version of the ConfoundRegressor from [1]_. Setting
+        cross_validate to True is equivalent to "foldwise covariate regression" (FwCR)
+        as described in Snoek et al. (2019). Setting this parameter to False, however,
+        is NOT equivalent to "whole dataset covariate regression" (WDCR) as it does not
+        apply covariate regression to the *full* dataset, but simply refits the
+        covariate model on the test-set. We recommend setting this parameter to True.
+        Transformer-objects in scikit-learn only allow to pass the data (X) and
+        optionally the target (y) to the fit and transform methods. However, we need
+        to index the covariate accordingly as well. To do so, we compare the X during
+        initialization (self.X) with the X passed to fit/transform. As such, we can
+        infer which samples are passed to the methods and index the covariate
+        accordingly. The precise flag controls the precision of the index matching.
 
         References
         ----------

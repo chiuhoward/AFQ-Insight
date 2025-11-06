@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from sklearn.model_selection import train_test_split
 
-from afqinsight.CovariateRegressor import (
+from afqinsight.covariate_regressor import (
     CovariateRegressor,
     IdentityTransformer,
     find_subset_indices,
