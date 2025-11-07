@@ -4,10 +4,11 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.impute import SimpleImputer
 
 
-def find_subset_indices(X_full, X_subset, method="hash"):
+def find_subset_indices(X_full, X_subset, method="hash", allow_missing=False):
     """
     Find row indices in X_full that correspond to rows in X_subset.
     Supports 'hash' (fast) and 'precise' (element-wise) matching.
+    Allow_missing appends empty array for non-matching rows if True.
     """
     if X_full.shape[1] != X_subset.shape[1]:
         raise ValueError(
@@ -21,9 +22,9 @@ def find_subset_indices(X_full, X_subset, method="hash"):
                 for j, full_row in enumerate(X_full)
                 if np.array_equal(full_row, subset_row, equal_nan=True)
             ]
-            if not matches:
+            if not matches and not allow_missing:
                 raise ValueError(f"No matching row found for subset row {i}")
-            indices.append(matches[0])
+            indices.append(matches[0] if matches else [])
     elif method == "hash":
         full_hashes = [hash(row.tobytes()) for row in X_full]
         for i, subset_row in enumerate(X_subset):
@@ -31,20 +32,13 @@ def find_subset_indices(X_full, X_subset, method="hash"):
             try:
                 indices.append(full_hashes.index(subset_hash))
             except ValueError as e:
-                raise ValueError(f"No matching row found for subset row {i}") from e
+                if allow_missing:
+                    indices.append([])
+                else:
+                    raise ValueError(f"No matching row found for subset row {i}") from e
     else:
         raise ValueError(f"Unknown method '{method}'. Use 'hash' or 'precise'.")
     return np.array(indices)
-
-
-class IdentityTransformer(BaseEstimator, TransformerMixin):
-    """A transformer that returns the input unchanged."""
-
-    def fit(self, X, y=None):
-        return self
-
-    def transform(self, X):
-        return X
 
 
 class CovariateRegressor(BaseEstimator, TransformerMixin):
@@ -55,7 +49,7 @@ class CovariateRegressor(BaseEstimator, TransformerMixin):
     def __init__(
         self,
         covariate,
-        X,
+        X_full,
         pipeline=None,
         cross_validate=True,
         precise=False,
@@ -69,7 +63,7 @@ class CovariateRegressor(BaseEstimator, TransformerMixin):
         covariate : numpy array
             Array of length (n_samples, n_covariates) to regress out of each
             feature; May have multiple columns for multiple covariates.
-        X : numpy array
+        X_full : numpy array
             Array of length (n_samples, n_features), from which the covariate
             will be regressed. This is used to determine how the
             covariate-models should be cross-validated (which is necessary
@@ -112,7 +106,7 @@ class CovariateRegressor(BaseEstimator, TransformerMixin):
         Transformer-objects in scikit-learn only allow to pass the data (X) and
         optionally the target (y) to the fit and transform methods. However, we need
         to index the covariate accordingly as well. To do so, we compare the X during
-        initialization (self.X) with the X passed to fit/transform. As such, we can
+        initialization (self.X_full) with the X passed to fit/transform. As such, we can
         infer which samples are passed to the methods and index the covariate
         accordingly. The precise flag controls the precision of the index matching.
 
@@ -125,7 +119,7 @@ class CovariateRegressor(BaseEstimator, TransformerMixin):
         """
         self.covariate = covariate.astype(np.float64)
         self.cross_validate = cross_validate
-        self.X = X
+        self.X_full = X_full
         self.precise = precise
         self.stack_intercept = stack_intercept
         self.weights_ = None
@@ -157,7 +151,7 @@ class CovariateRegressor(BaseEstimator, TransformerMixin):
 
         # Find indices of X subset in the original X
         method = "precise" if self.precise else "hash"
-        fit_idx = find_subset_indices(self.X, X, method=method)
+        fit_idx = find_subset_indices(self.X_full, X, method=method)
 
         # Remove unique ID column if specified
         if self.unique_id_col_index is not None:
@@ -213,7 +207,7 @@ class CovariateRegressor(BaseEstimator, TransformerMixin):
 
         # Find indices of X subset in the original X
         method = "precise" if self.precise else "hash"
-        transform_idx = find_subset_indices(self.X, X, method=method)
+        transform_idx = find_subset_indices(self.X_full, X, method=method)
 
         # Remove unique ID column if specified
         if self.unique_id_col_index is not None:

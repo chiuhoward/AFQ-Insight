@@ -1,12 +1,22 @@
 import numpy as np
 import pytest
+from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.model_selection import train_test_split
 
 from afqinsight.covariate_regressor import (
     CovariateRegressor,
-    IdentityTransformer,
     find_subset_indices,
 )
+
+
+class IdentityTransformer(BaseEstimator, TransformerMixin):
+    """A transformer that returns the input unchanged."""
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        return X
 
 
 class TestFindSubsetIndices:
@@ -82,7 +92,7 @@ class TestCovariateRegressor:
         covariate = np.random.randn(n_samples, 2)  # 2 covariates
 
         # Initialize regressor
-        regressor = CovariateRegressor(covariate=covariate, X=X)
+        regressor = CovariateRegressor(covariate=covariate, X_full=X)
 
         # Fit and transform
         X_train, X_test = train_test_split(X, test_size=0.3, random_state=42)
@@ -105,7 +115,9 @@ class TestCovariateRegressor:
         X = np.random.randn(n_samples, n_features)
         covariate = np.random.randn(n_samples, 1)
 
-        regressor = CovariateRegressor(covariate=covariate, X=X, cross_validate=False)
+        regressor = CovariateRegressor(
+            covariate=covariate, X_full=X, cross_validate=False
+        )
 
         X_train, X_test = train_test_split(X, test_size=0.3, random_state=42)
         regressor.fit(X_train)
@@ -125,7 +137,7 @@ class TestCovariateRegressor:
         X[10:15, 5] = np.nan
         covariate[20:25] = np.nan
 
-        regressor = CovariateRegressor(covariate=covariate, X=X)
+        regressor = CovariateRegressor(covariate=covariate, X_full=X)
 
         X_train, X_test = train_test_split(X, test_size=0.3, random_state=42)
         regressor.fit(X_train)
@@ -143,7 +155,9 @@ class TestCovariateRegressor:
         X = np.random.randn(n_samples, n_features)
         covariate = np.random.randn(n_samples, 1)
 
-        regressor = CovariateRegressor(covariate=covariate, X=X, stack_intercept=False)
+        regressor = CovariateRegressor(
+            covariate=covariate, X_full=X, stack_intercept=False
+        )
 
         X_train, X_test = train_test_split(X, test_size=0.3, random_state=42)
         regressor.fit(X_train)
@@ -176,7 +190,7 @@ class TestCovariateRegressor:
         covariate = np.random.randn(n_samples, 1)
         pipeline = StandardScaler()
 
-        regressor = CovariateRegressor(covariate=covariate, X=X, pipeline=pipeline)
+        regressor = CovariateRegressor(covariate=covariate, X_full=X, pipeline=pipeline)
 
         X_train, X_test = train_test_split(X, test_size=0.3, random_state=42)
         regressor.fit(X_train)
@@ -197,7 +211,7 @@ class TestCovariateRegressor:
         covariate = np.random.randn(n_samples, 1)
 
         regressor = CovariateRegressor(
-            covariate=covariate, X=X_with_id, unique_id_col_index=0
+            covariate=covariate, X_full=X_with_id, unique_id_col_index=0
         )
 
         X_train, X_test = train_test_split(X_with_id, test_size=0.3, random_state=42)
