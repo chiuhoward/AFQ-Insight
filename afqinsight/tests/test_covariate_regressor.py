@@ -1,22 +1,12 @@
 import numpy as np
 import pytest
-from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
 from afqinsight.covariate_regressor import (
     CovariateRegressor,
     find_subset_indices,
 )
-
-
-class IdentityTransformer(BaseEstimator, TransformerMixin):
-    """A transformer that returns the input unchanged."""
-
-    def fit(self, X, y=None):
-        return self
-
-    def transform(self, X):
-        return X
 
 
 class TestFindSubsetIndices:
@@ -67,23 +57,14 @@ class TestFindSubsetIndices:
             find_subset_indices(X_full, X_subset, method="invalid")
 
 
-class TestIdentityTransformer:
-    def test_identity_transformer(self):
-        """Test that IdentityTransformer returns input unchanged"""
-        X = np.random.rand(100, 20)
-        transformer = IdentityTransformer()
-
-        # Test fit returns self
-        assert transformer.fit(X) is transformer
-
-        # Test transform returns unchanged data
-        X_transformed = transformer.transform(X)
-        np.testing.assert_array_equal(X, X_transformed)
-
-
 class TestCovariateRegressor:
     def test_basic_functionality(self):
-        """Test basic covariate regression"""
+        """
+        Test basic covariate regression with default parameters.
+
+        Scenario: Standard use case with multiple covariates and default settings
+        (cross_validate=True, stack_intercept=True).
+        """
         np.random.seed(42)
         n_samples, n_features = 100, 20
 
@@ -108,7 +89,12 @@ class TestCovariateRegressor:
         assert regressor.weights_.shape[1] == n_features
 
     def test_cross_validate_false(self):
-        """Test with cross_validate=False"""
+        """
+        Test CovariateRegressor with cross_validate=False.
+
+        Scenario: Disable cross-validation to test the regressor with
+        standard non-cross-validated fitting.
+        """
         np.random.seed(42)
         n_samples, n_features = 50, 10
 
@@ -126,7 +112,13 @@ class TestCovariateRegressor:
         assert X_residuals.shape == X_test.shape
 
     def test_with_missing_values(self):
-        """Test handling of missing values"""
+        """
+        Test CovariateRegressor handles missing values (NaN) correctly.
+
+        Edge case: Data contains NaN values in both features and covariates.
+        The regressor should handle these appropriately without introducing
+        NaN values in the output.
+        """
         np.random.seed(42)
         n_samples, n_features = 100, 15
 
@@ -148,7 +140,12 @@ class TestCovariateRegressor:
         assert X_residuals.shape == X_test.shape
 
     def test_no_intercept(self):
-        """Test with stack_intercept=False"""
+        """
+        Test CovariateRegressor with stack_intercept=False.
+
+        Edge case: Disable intercept term in the regression model.
+        Weights should only contain the covariate coefficients, no intercept.
+        """
         np.random.seed(42)
         n_samples, n_features = 50, 8
 
@@ -168,8 +165,13 @@ class TestCovariateRegressor:
         assert X_residuals.shape == X_test.shape
 
     def test_precise_vs_hash_methods(self):
-        """Test that both methods give same results"""
+        """
+        Test that find_subset_indices produces consistent results
+        across different methods (precise and hash).
 
+        Scenario: Verify that both methods for finding subset indices
+        return the same results.
+        """
         np.random.seed(42)
         X_full = np.random.rand(50, 10)
         X_subset = X_full[10:20]
@@ -180,9 +182,12 @@ class TestCovariateRegressor:
         np.testing.assert_array_equal(indices_precise, indices_hash)
 
     def test_pipeline_integration(self):
-        """Test with a custom pipeline"""
-        from sklearn.preprocessing import StandardScaler
+        """
+        Test CovariateRegressor with a preprocessing pipeline.
 
+        Scenario: Use StandardScaler as a preprocessing pipeline before
+        covariate regression to test integration with sklearn transformers.
+        """
         np.random.seed(42)
         n_samples, n_features = 100, 10
 
@@ -199,7 +204,13 @@ class TestCovariateRegressor:
         assert X_residuals.shape == X_test.shape
 
     def test_unique_id_column_removal(self):
-        """Test removal of unique ID column"""
+        """
+        Test CovariateRegressor correctly removes unique ID column.
+
+        Edge case: Data includes a unique ID column that should be excluded
+        from regression analysis. Verify that the output has one fewer
+        column than the input.
+        """
         np.random.seed(42)
         n_samples, n_features = 50, 10
 
